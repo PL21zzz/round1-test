@@ -10,6 +10,7 @@ const Node = ({
   onDisappear,
   gameState,
   isAutoClicked,
+  points,
 }) => {
   const [clickTime, setClickTime] = useState(null);
 
@@ -42,21 +43,24 @@ const Node = ({
     }
   }, [currentTime, clickTime, onDisappear, gameState]);
 
+  const zIndex = clickTime !== null ? 5000 : parseInt(points) - value;
+
+  // 2. Class mờ dần: Chỉ thêm transition khi clickTime !== null
+  const isFading = clickTime !== null;
+  const fadeClasses = isFading
+    ? "opacity-0 transition-opacity duration-[3000ms] ease-linear"
+    : "opacity-100";
   const remaining = clickTime !== null ? 3.0 - (currentTime - clickTime) : 0;
-  const isFading = clickTime !== null && gameState === "PLAYING";
 
   return (
     <div
       onClick={handleClick}
       className={`absolute w-12 h-12 rounded-full border-2 border-black flex flex-col items-center justify-center font-bold cursor-pointer
-        ${
-          isFading
-            ? "bg-orange-400 opacity-0 transition-opacity duration-3000 ease-linear"
-            : "bg-blue-500 text-white"
-        }
-        ${gameState === "GAME_OVER" && clickTime !== null ? "bg-orange-400 opacity-50" : ""}
+        ${clickTime !== null ? "bg-orange-400" : "bg-blue-500 text-white"}
+        ${fadeClasses}
+        ${gameState === "GAME_OVER" && clickTime !== null ? "opacity-50" : ""}
       `}
-      style={{ top: y, left: x }}
+      style={{ top: y, left: x, zIndex: zIndex }}
     >
       <span>{value}</span>
       {clickTime !== null && (

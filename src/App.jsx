@@ -176,6 +176,7 @@ function App() {
               currentTime={time}
               nextValue={nextValue}
               gameState={gameState}
+              points={points}
               onNodeClick={handleNodeClick}
               isAutoClicked={autoClickedNodeIds.includes(node.id)}
               onDisappear={() => {
