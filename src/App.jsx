@@ -14,10 +14,11 @@ function App() {
   const [nodes, setNodes] = useState([]);
   const [gameState, setGameState] = useState(GAME_STATE.WAITING);
   const [nextValue, setNextValue] = useState(1);
+  const [clearedCount, setClearedCount] = useState(0);
 
   const generateNodes = () => {
     const newNodes = Array.from({ length: points }, (_, i) => ({
-      id: i,
+      id: Date.now() + i, // Tạo ID dựa trên thời gian để đảm bảo mỗi lần Restart là ID mới
       value: i + 1,
       x: Math.random() * 350,
       y: Math.random() * 350,
@@ -53,19 +54,30 @@ function App() {
 
   const handlePlay = () => {
     if (gameState === GAME_STATE.WAITING) {
-      generateNodes();
-      setGameState(GAME_STATE.PLAYING);
+      // Chỉ tạo node nếu đã có số point hợp lệ
+      if (points > 0) {
+        generateNodes();
+        setGameState(GAME_STATE.PLAYING);
+      } else {
+        alert("Vui lòng nhập số Points!");
+      }
     } else {
       handleRestart();
     }
   };
 
   const handleRestart = () => {
-    setNodes([]);
-    setGameState(GAME_STATE.WAITING);
     setTime(0.0);
-    setPoints(1);
     setNextValue(1);
+    setClearedCount(0);
+
+    if (gameState === GAME_STATE.PLAYING) {
+      generateNodes();
+      setGameState(GAME_STATE.PLAYING);
+    } else {
+      setNodes([]);
+      setGameState(GAME_STATE.WAITING);
+    }
   };
 
   return (
@@ -132,9 +144,10 @@ function App() {
               nextValue={nextValue}
               gameState={gameState}
               onNodeClick={handleNodeClick}
-              onDisappear={() =>
-                setNodes((prev) => prev.filter((n) => n.id !== node.id))
-              }
+              onDisappear={() => {
+                setNodes((prev) => prev.filter((n) => n.id !== node.id));
+                setClearedCount((prev) => prev + 1); // Cập nhật biến đếm tại đây
+              }}
             />
           ))}
         </main>
