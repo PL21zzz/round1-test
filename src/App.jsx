@@ -5,10 +5,11 @@ const GAME_STATE = {
   WAITING: "WAITING",
   PLAYING: "PLAYING",
   FINISHED: "FINISHED",
+  GAME_OVER: "GAME_OVER",
 };
 
 function App() {
-  const [points, setPoints] = useState(0);
+  const [points, setPoints] = useState(1);
   const [time, setTime] = useState(0.0);
   const [nodes, setNodes] = useState([]);
   const [gameState, setGameState] = useState(GAME_STATE.WAITING);
@@ -25,9 +26,11 @@ function App() {
   };
 
   useEffect(() => {
-    let interval;
+    let interval = null;
     if (gameState === GAME_STATE.PLAYING) {
       interval = setInterval(() => setTime((prev) => prev + 0.1), 100);
+    } else {
+      clearInterval(interval);
     }
     return () => clearInterval(interval);
   }, [gameState]);
@@ -42,16 +45,18 @@ function App() {
     if (value === nextValue) {
       setNextValue((prev) => prev + 1);
       return true;
+    } else {
+      setGameState(GAME_STATE.GAME_OVER);
+      return false;
     }
-    return false;
   };
 
   const handlePlay = () => {
-    if (gameState === GAME_STATE.PLAYING) {
-      handleRestart();
-    } else {
+    if (gameState === GAME_STATE.WAITING) {
       generateNodes();
       setGameState(GAME_STATE.PLAYING);
+    } else {
+      handleRestart();
     }
   };
 
@@ -68,9 +73,19 @@ function App() {
       <div className="w-full max-w-lg border-2 border-gray-300 p-6 bg-white shadow-xl rounded-lg">
         <header className="mb-6">
           <h1
-            className={`text-2xl font-bold mb-4 ${gameState === GAME_STATE.FINISHED ? "text-green-600" : "text-gray-800"}`}
+            className={`text-2xl font-bold mb-4 ${
+              gameState === GAME_STATE.FINISHED
+                ? "text-green-600"
+                : gameState === GAME_STATE.GAME_OVER
+                  ? "text-red-600"
+                  : "text-gray-800"
+            }`}
           >
-            {gameState === GAME_STATE.FINISHED ? "ALL CLEARED" : "LET'S PLAY"}
+            {gameState === GAME_STATE.FINISHED
+              ? "ALL CLEARED"
+              : gameState === GAME_STATE.GAME_OVER
+                ? "GAME OVER"
+                : "LET'S PLAY"}
           </h1>
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-4">
@@ -115,6 +130,7 @@ function App() {
               y={node.y}
               currentTime={time}
               nextValue={nextValue}
+              gameState={gameState}
               onNodeClick={handleNodeClick}
               onDisappear={() =>
                 setNodes((prev) => prev.filter((n) => n.id !== node.id))
