@@ -15,6 +15,8 @@ function App() {
   const [gameState, setGameState] = useState(GAME_STATE.WAITING);
   const [nextValue, setNextValue] = useState(1);
   const [clearedCount, setClearedCount] = useState(0);
+  const [isAutoPlay, setIsAutoPlay] = useState(0);
+  const [autoClickedNodeIds, setAutoClickedNodeIds] = useState([]);
 
   const generateNodes = () => {
     const newNodes = Array.from({ length: points }, (_, i) => ({
@@ -25,6 +27,12 @@ function App() {
     }));
     setNodes(newNodes);
   };
+
+  useEffect(() => {
+    if (gameState !== GAME_STATE.PLAYING) {
+      setIsAutoPlay(false);
+    }
+  }, [gameState]);
 
   useEffect(() => {
     let interval = null;
@@ -41,6 +49,20 @@ function App() {
       setGameState(GAME_STATE.FINISHED);
     }
   }, [nextValue, nodes.length, points]);
+
+  useEffect(() => {
+    let autoPlayInterval = null;
+    if (isAutoPlay && gameState === GAME_STATE.PLAYING) {
+      autoPlayInterval = setInterval(() => {
+        const nextNode = nodes.find((n) => n.value === nextValue);
+        if (nextNode) {
+          setAutoClickedNodeIds((prev) => [...prev, nextNode.id]);
+          setNextValue((prev) => prev + 1);
+        }
+      }, 1000);
+    }
+    return () => clearInterval(autoPlayInterval);
+  }, [isAutoPlay, gameState, nextValue, nodes]);
 
   const handleNodeClick = (value) => {
     if (value === nextValue) {
@@ -70,6 +92,7 @@ function App() {
     setTime(0.0);
     setNextValue(1);
     setClearedCount(0);
+    setAutoClickedNodeIds([]);
 
     if (gameState === GAME_STATE.PLAYING) {
       generateNodes();
@@ -124,8 +147,18 @@ function App() {
               </button>
 
               {gameState === GAME_STATE.PLAYING && (
-                <button className="bg-gray-400 text-white font-bold py-1 px-4 rounded shadow hover:bg-gray-500 w-fit">
-                  Auto Click
+                <button
+                  onClick={() => setIsAutoPlay(!isAutoPlay)}
+                  disabled={gameState !== GAME_STATE.PLAYING} // Vô hiệu hóa nếu không phải đang chơi
+                  className={`py-1 px-4 rounded shadow font-bold transition-all ${
+                    gameState !== GAME_STATE.PLAYING
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : isAutoPlay
+                        ? "bg-red-500 text-white hover:bg-red-600"
+                        : "bg-green-500 text-white hover:bg-green-600"
+                  }`}
+                >
+                  Auto Play: {isAutoPlay ? "ON" : "OFF"}
                 </button>
               )}
             </div>
@@ -144,6 +177,7 @@ function App() {
               nextValue={nextValue}
               gameState={gameState}
               onNodeClick={handleNodeClick}
+              isAutoClicked={autoClickedNodeIds.includes(node.id)}
               onDisappear={() => {
                 setNodes((prev) => prev.filter((n) => n.id !== node.id));
                 setClearedCount((prev) => prev + 1); // Cập nhật biến đếm tại đây

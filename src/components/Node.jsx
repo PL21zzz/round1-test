@@ -9,6 +9,7 @@ const Node = ({
   onNodeClick,
   onDisappear,
   gameState,
+  isAutoClicked,
 }) => {
   const [clickTime, setClickTime] = useState(null);
 
@@ -17,6 +18,18 @@ const Node = ({
     if (onNodeClick(value)) {
       setClickTime(currentTime); // Lưu lại thời điểm bắt đầu click
     }
+  };
+
+  useEffect(() => {
+    if (isAutoClicked && clickTime === null) {
+      handleManualClick();
+    }
+  }, [isAutoClicked]);
+
+  const handleManualClick = () => {
+    if (gameState !== "PLAYING" || clickTime !== null) return;
+
+    setClickTime(currentTime);
   };
 
   // Logic tự xóa sau 3s
